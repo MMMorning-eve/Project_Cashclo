@@ -23,23 +23,26 @@ public class ChatRequest {
     /**
      *
      * @param model 可选模型
-     * @param messages 需要ArrayLists<message>
      * @param stream 流式输出
      */
-    public ChatRequest(String model, ArrayList<Message> messages, boolean stream) {
+    public ChatRequest(String model, boolean stream) {
         this.model = model;
-        this.messages = messages;
+        this.messages = new  ArrayList<Message>();
         this.stream = stream;
     }
 
+    public void addMessage(Message message) {
+        this.messages.add(message);
+    }
 
+    //测试代码
     public static void main(String[] args) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
+        ChatRequest newQ = new ChatRequest("gpt-3",false);
+        newQ.addMessage(new Message(Role.SYSTEM,"You a helpful assistant"));
+        newQ.addMessage(new Message(Role.USER,"Hello World!"));
 
-        ArrayList<Message> messages = new ArrayList<>();
-        messages.add(new Message(Role.SYSTEM,"You are a helpful assistant"));
-        messages.add(new Message(Role.USER,"Hello world"));
-        System.out.println(mapper.writeValueAsString(new ChatRequest("deepseek",messages,false)));
+        System.out.println(mapper.writeValueAsString(newQ));
     }
 
 }

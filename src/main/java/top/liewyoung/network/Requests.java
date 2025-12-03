@@ -65,11 +65,9 @@ public final class Requests {
         Message message1 = new Message(Role.SYSTEM,"You are a helpful assistant");
         Message message2 = new Message(Role.USER,"Hello world");
 
-        ArrayList<Message> messages = new ArrayList<>();
-        messages.add(message1);
-        messages.add(message2);
-
-        ChatRequest req = new ChatRequest("deepseek-chat",messages,false);
+        ChatRequest req = new ChatRequest("deepseek-chat",false);
+        req.addMessage(message1);
+        req.addMessage(message2);
 
     }
 }
