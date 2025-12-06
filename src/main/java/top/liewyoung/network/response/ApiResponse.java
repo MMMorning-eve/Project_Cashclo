@@ -23,9 +23,11 @@ public class ApiResponse {
     private String model;
     private Usage usage;
     private String system_fingerprint;
+    private List<Choice> choices;
 
-    public List<Choice> choices;
+    public ApiResponse(){
 
+    }
 
 }
 
