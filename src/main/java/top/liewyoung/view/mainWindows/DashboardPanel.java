@@ -1,5 +1,8 @@
 package top.liewyoung.view.mainWindows;
 
+import top.liewyoung.strategy.MapPostition;
+import top.liewyoung.view.component.MDialog;
+
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -10,9 +13,15 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
+import java.util.Random;
 
+/**
+ * @author LiewYoung
+ * @since 2025/12/14
+ */
 // 简单的字体记录类
-record FontSize(int title, int heavy, int normal) {}
+record FontSize(int title, int heavy, int normal) {
+}
 
 public class DashboardPanel extends JPanel {
     private final InfoPanel infoPanel;
@@ -43,9 +52,16 @@ public class DashboardPanel extends JPanel {
     private final Font FONT_NORMAL = new Font("微软雅黑", Font.PLAIN, fontSize.normal());
     private final Font FONT_TITLE = new Font("微软雅黑", Font.BOLD, fontSize.title());
 
-    public DashboardPanel() {
-        setPreferredSize(new Dimension(300,getHeight()));
+    private final Random dice = new Random();
+    private final MapDraw map;
+    private final MapPostition mapPostition = new MapPostition();
+    private int playerPosition = 0;
 
+    private static int lastDice = 0;
+
+    public DashboardPanel(MapDraw map) {
+        setPreferredSize(new Dimension(300, getHeight()));
+        this.map = map;
         // 全局设置
         setLayout(new BorderLayout(0, 16)); // MD3 通常间距稍大，设为 16px
         setBorder(new EmptyBorder(16, 16, 16, 16));
@@ -56,7 +72,59 @@ public class DashboardPanel extends JPanel {
         propertyPanel = new PropertyPanel();
 
         //  底部按钮区域
-        JButton diceButton = new JButton("摇色子") {
+        JButton diceButton = buttonFactory("摇骰子");
+        diceButton.addActionListener(e -> {
+            this.lastDice = dice.nextInt(1, 7);
+            playerPosition += this.lastDice;
+            String type = map.getType(
+                    mapPostition.mapOrder.get(playerPosition % 28).x(),
+                    mapPostition.mapOrder.get(playerPosition % 28).y()
+            ).name();
+            MDialog dialog = new MDialog("你摇出了 " + this.lastDice + "类型："+type, "我知道了");
+
+            map.updatePlayerPosition(
+                    mapPostition.mapOrder.get(playerPosition % 28).x(),
+                    mapPostition.mapOrder.get(playerPosition % 28).y()
+            );
+
+            dialog.setLocationRelativeTo(this);
+            dialog.setAlwaysOnTop(true);
+            dialog.setModal(true);
+            dialog.setVisible(true);
+
+        });
+
+        JButton helpButton = buttonFactory("关于");
+        helpButton.addActionListener(e -> {
+            JFrame frame = new JFrame("关于");
+            frame.add(new Setting());
+            frame.setLocation(300,100);
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.pack();
+            frame.setVisible(true);
+        });
+
+
+        // 为了让按钮不被拉伸，放进一个 FlowLayout 的 Panel
+        JPanel buttonContainer = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonContainer.setBackground(MD_SURFACE); // 与背景融合
+        buttonContainer.add(diceButton);
+        buttonContainer.add(helpButton);
+
+        // 组装
+        add(infoPanel, BorderLayout.NORTH);
+        add(propertyPanel, BorderLayout.CENTER);
+        add(buttonContainer, BorderLayout.SOUTH);
+    }
+
+    public void updateStats(int newIncome, int newOutcome) {
+        this.income = newIncome;
+        this.outcome = newOutcome;
+        infoPanel.refreshData();
+    }
+
+    private JButton buttonFactory(String text) {
+        JButton Button = new JButton(text) {
             // 自定义绘制圆角背景
             @Override
             protected void paintComponent(Graphics g) {
@@ -73,28 +141,14 @@ public class DashboardPanel extends JPanel {
                 super.paintComponent(g);
             }
         };
-        diceButton.setFont(new Font("微软雅黑", Font.BOLD, 14));
-        diceButton.setForeground(MD_ON_PRIMARY);
-        diceButton.setFocusPainted(false);
-        diceButton.setContentAreaFilled(false); // 去除默认背景
-        diceButton.setBorderPainted(false);     // 去除默认边框
-        diceButton.setPreferredSize(new Dimension(120, 40)); // 设置合适的大小
+        Button.setFont(new Font("微软雅黑", Font.BOLD, 14));
+        Button.setForeground(MD_ON_PRIMARY);
+        Button.setFocusPainted(false);
+        Button.setContentAreaFilled(false); // 去除默认背景
+        Button.setBorderPainted(false);     // 去除默认边框
+        Button.setPreferredSize(new Dimension(120, 40));// 设置合适的大小
 
-        // 为了让按钮不被拉伸，放进一个 FlowLayout 的 Panel
-        JPanel buttonContainer = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        buttonContainer.setBackground(MD_SURFACE); // 与背景融合
-        buttonContainer.add(diceButton);
-
-        // 组装
-        add(infoPanel, BorderLayout.NORTH);
-        add(propertyPanel, BorderLayout.CENTER);
-        add(buttonContainer, BorderLayout.SOUTH);
-    }
-
-    public void updateStats(int newIncome, int newOutcome) {
-        this.income = newIncome;
-        this.outcome = newOutcome;
-        infoPanel.refreshData();
+        return Button;
     }
 
     /**
@@ -117,7 +171,7 @@ public class DashboardPanel extends JPanel {
                     FONT_TITLE,
                     MD_ON_PRIMARY_CONTAINER // 标题颜色
             );
-            setBorder(new CompoundBorder(new EmptyBorder(10, 20, 15, 20),titledBorder));
+            setBorder(new CompoundBorder(new EmptyBorder(10, 20, 15, 20), titledBorder));
 
             incomeDataLabel = createDataLabel(income);
             outcomeDataLabel = createDataLabel(outcome);
@@ -225,12 +279,5 @@ public class DashboardPanel extends JPanel {
         }
     }
 
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("MD3 Dashboard");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setContentPane(new DashboardPanel());
-        frame.setSize(420, 700);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-    }
+
 }

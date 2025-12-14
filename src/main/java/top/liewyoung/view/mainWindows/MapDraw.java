@@ -17,17 +17,58 @@ import java.util.Random;
  */
 
 
+
 public class MapDraw extends JPanel {
     //全局设置
     private static final int MAP_HEIGHT = 8;
     private static final int MAP_WIDTH = 8;
-    private static final int MARGIN = 30;
+    private static final int MARGIN = 50;
     private static final int SPACING = 10;
-    private static final int TILE_WIDTH = 70;
+    private static final int TILE_WIDTH = 90;
     private static final int TILE_HEIGHT = 70;
+    private static final int PLAYER_SIZE = 20;
 
     //储存方块
     private List<Tile> tiles = new ArrayList<Tile>();
+
+
+    private final PlayerPosition playerPosition = new PlayerPosition(0, 0);
+
+    //绘制玩家
+    public void drawPlayer(Graphics g) {
+        int x = MARGIN+playerPosition.x * (SPACING + TILE_WIDTH)+(TILE_WIDTH - PLAYER_SIZE)/2;
+        int y = MARGIN+playerPosition.y * (SPACING + TILE_HEIGHT)+(TILE_HEIGHT - PLAYER_SIZE)/2;
+
+        Graphics2D  g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        g2d.setColor(MaterialPalette.MOSS.PURPLE.error());
+        g2d.fillOval(x, y, 20, 20);
+
+        g2d.dispose();
+
+    }
+
+    public void updatePlayerPosition(int x, int y) {
+        playerPosition.x = x;
+        playerPosition.y = y;
+        repaint();
+    }
+
+    public TitlesTypes getType(int x, int y) {
+        for (Tile tile : tiles) {
+            if (tile.x == x && tile.y == y) {
+                return tile.type;
+            }
+        }
+        return null;
+    }
+
+    public void  refreshMap() {
+        tiles.clear();
+        repaint();
+    }
+
 
 
     @Override
@@ -44,12 +85,19 @@ public class MapDraw extends JPanel {
         calculateTiles();
         //绘制方块
         drawTiles(g);
-
+        //绘制玩家
+        drawPlayer(g);
         g2d.dispose();
     }
 
-    public void calculateTiles() {
+    protected void calculateTiles() {
+        if(tiles.size() > 0) return;
+
         Random r = new Random();
+
+
+
+        //第一行
         for (int i = 0; i < MAP_WIDTH; i++) {
             int index;
             if (i == 1) {
@@ -61,19 +109,19 @@ public class MapDraw extends JPanel {
             Tile tile = new Tile(i, 0, type);
             tiles.add(tile);
         }
-
+        //第一列
         for (int i = 1; i < MAP_HEIGHT - 1; i++) {
             int index = r.nextInt(1, 6);
             Tile tile = new Tile(0, i, TitlesTypes.values()[index]);
             tiles.add(tile);
         }
-
+        //第二列
         for (int i = 1; i < MAP_HEIGHT - 1; i++) {
             int index = r.nextInt(1, 6);
             Tile tile = new Tile(MAP_WIDTH - 1, i, TitlesTypes.values()[index]);
             tiles.add(tile);
         }
-
+        //第二行
         for (int i = 0; i < MAP_WIDTH; i++) {
             int index = r.nextInt(1, 6);
             Tile tile = new Tile(i, MAP_HEIGHT - 1, TitlesTypes.values()[index]);
@@ -83,7 +131,8 @@ public class MapDraw extends JPanel {
     }
 
 
-    public void drawTiles(Graphics g) {
+
+    protected void drawTiles(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
         MaterialPalette palette = MaterialPalette.MOSS;
 
@@ -115,6 +164,8 @@ public class MapDraw extends JPanel {
 
         }
     }
+
+
 
 
     /**
@@ -179,4 +230,6 @@ public class MapDraw extends JPanel {
             this.type = type;
         }
     }
+
+
 }

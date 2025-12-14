@@ -7,15 +7,17 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Stater {
+    public static MapDraw map;
     public static void main(String[] args) {
         JFrame frame = new JFrame();
         frame.setLayout(new BorderLayout());
-        MapDraw map = new MapDraw();
+        map = new MapDraw();
         map.setBackground(new Color(253, 253, 245));
         frame.add(map, BorderLayout.CENTER);
-        frame.add(new DashboardPanel(), BorderLayout.EAST);
+        frame.add(new DashboardPanel(map), BorderLayout.EAST);
         frame.setBackground(new Color(253, 253, 245));
-        frame.setSize(1000, 735);
+        frame.setSize(1200, 835);
+        frame.setLocation(300, 100);
 
         frame.setResizable(false);
         frame.setVisible(true);
